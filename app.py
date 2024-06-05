@@ -1,22 +1,22 @@
-import json
 import datetime
-import redis
+import json
 
-from peewee import *
-from utils import validate_token
-from logger import logger
+import redis
 from flask import Flask, request, jsonify
 
+from google_app import google_app, cache
 from models.account_model import (
     TblPlatformAccount,
     TblScrapySite,
     TblScrapyVisits,
     TblCategory,
 )
-from google_app import google_app
+from utils import validate_token
+from models import database
 
 app = Flask(__name__)
-app.register_blueprint(google_app, url_prefix="/google_app")
+app.register_blueprint(google_app, url_prefix="/google")
+cache.init_app(app)
 
 redis_client = redis.StrictRedis(
     **{
@@ -26,6 +26,18 @@ redis_client = redis.StrictRedis(
         "db": 0,
     }
 )
+
+
+# @app.before_request
+# def bf():
+#     database.connect()
+#
+#
+# @app.teardown_request
+# def teardown(exc):
+#     if database.is_closed() is False:
+#         database.close()
+
 
 @app.route("/categories")
 def get_categories():
