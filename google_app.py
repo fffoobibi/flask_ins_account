@@ -7,12 +7,13 @@ from flask_caching import Cache
 from logger import logger
 from models.account_model import TblScrapySite
 from models.google_models import FlaskPlatformAccounts, ScrapySitesPlatformAccount
+from utils import format_datetime_fields
 
 
 def make_cache_key(*args, **kwargs):
-    site_id = request.json.get('site_id')
-    account_type = request.json.get('account_type', 2)
-    return f'site_id_{site_id}_account_type_{account_type}'
+    site_id = request.json.get("site_id")
+    account_type = request.json.get("account_type", 2)
+    return f"site_id_{site_id}_account_type_{account_type}"
 
 
 google_app = Blueprint("google_app", __name__)
@@ -22,7 +23,7 @@ cache = Cache(config=config)
 
 @google_app.errorhandler(Exception)
 def handler_error(error):
-    logger.error('error', exc_info=True)
+    logger.error("error", exc_info=True)
     return {"code": -1, "msg": str(error)}
 
 
@@ -35,8 +36,12 @@ def check_token():
 
 @google_app.get("/simple_account_list")
 def simple_account_list():
-    rs = list(FlaskPlatformAccounts.select().where(FlaskPlatformAccounts.is_delete == 0).dicts())
-    return {'code': 0, 'msg': 'success', 'data': rs}
+    rs = list(
+        FlaskPlatformAccounts.select()
+        .where(FlaskPlatformAccounts.is_delete == 0)
+        .dicts()
+    )
+    return {"code": 0, "msg": "success", "data": rs}
 
 
 @google_app.get("/account_list")
@@ -44,10 +49,17 @@ def account_list():
     resp = FlaskPlatformAccounts.select().dicts()
     rs = list(resp)
     for v in rs:
-        v['sites'] = list(TblScrapySite.select(TblScrapySite.id, TblScrapySite.site_url, TblScrapySite.note).
-                          join(ScrapySitesPlatformAccount,
-                               on=(TblScrapySite.id == ScrapySitesPlatformAccount.scrapy_site_id)).where(
-            ScrapySitesPlatformAccount.platform_account_id == v['id']).dicts())
+        v["sites"] = list(
+            TblScrapySite.select(
+                TblScrapySite.id, TblScrapySite.site_url, TblScrapySite.note
+            )
+            .join(
+                ScrapySitesPlatformAccount,
+                on=(TblScrapySite.id == ScrapySitesPlatformAccount.scrapy_site_id),
+            )
+            .where(ScrapySitesPlatformAccount.platform_account_id == v["id"])
+            .dicts()
+        )
     return {"code": 0, "data": rs}
 
 
@@ -71,15 +83,30 @@ def modify_account():
 @google_app.post("/get_account")
 @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 14)
 def get_account():
-    site_id = request.json.get('site_id')
-    account_type = request.json.get('account_type', 2)
-    flask_accounts = FlaskPlatformAccounts.select().join(ScrapySitesPlatformAccount, on=(
-            FlaskPlatformAccounts.id == ScrapySitesPlatformAccount.platform_account_id
-    )).join(TblScrapySite, on=(TblScrapySite.id == ScrapySitesPlatformAccount.scrapy_site_id)).where(
-        FlaskPlatformAccounts.account_type == account_type,
-        FlaskPlatformAccounts.can_use == 1,
-        ScrapySitesPlatformAccount.can_use == 1,
-        TblScrapySite.id == site_id).dicts()
+    site_id = request.json.get("site_id")
+    account_type = request.json.get("account_type", 2)
+    flask_accounts = (
+        FlaskPlatformAccounts.select()
+        .join(
+            ScrapySitesPlatformAccount,
+            on=(
+                FlaskPlatformAccounts.id
+                == ScrapySitesPlatformAccount.platform_account_id
+            ),
+        )
+        .join(
+            TblScrapySite,
+            on=(TblScrapySite.id == ScrapySitesPlatformAccount.scrapy_site_id),
+        )
+        .where(
+            FlaskPlatformAccounts.is_delete == 0,
+            FlaskPlatformAccounts.account_type == account_type,
+            FlaskPlatformAccounts.can_use == 1,
+            ScrapySitesPlatformAccount.can_use == 1,
+            TblScrapySite.id == site_id,
+        )
+        .dicts()
+    )
     rs = list(flask_accounts)
     if rs:
         return {"code": 0, "data": random.choice(rs), "msg": "success"}
@@ -87,7 +114,7 @@ def get_account():
         return {"code": 0, "data": None, "msg": "无可用账号"}
 
 
-@google_app.get('/sites_list')
+@google_app.get("/sites_list")
 def sites_list():
     sites = TblScrapySite.select(
         TblScrapySite.id,
@@ -99,39 +126,62 @@ def sites_list():
     ).dicts()
     rs = list(sites)
     for v in rs:
-        v['accounts'] = list(FlaskPlatformAccounts.select().
-                             join(ScrapySitesPlatformAccount,
-                                  on=(
-                                          FlaskPlatformAccounts.id == ScrapySitesPlatformAccount.platform_account_id)).where(
-            ScrapySitesPlatformAccount.scrapy_site_id == v['id']).order_by(FlaskPlatformAccounts.account_type).dicts())
+        v["accounts"] = list(
+            FlaskPlatformAccounts.select()
+            .join(
+                ScrapySitesPlatformAccount,
+                on=(
+                    FlaskPlatformAccounts.id
+                    == ScrapySitesPlatformAccount.platform_account_id
+                ),
+            )
+            .where(ScrapySitesPlatformAccount.scrapy_site_id == v["id"])
+            .order_by(FlaskPlatformAccounts.account_type)
+            .dicts()
+        )
 
-    return {'code': 0, "data": rs, "msg": "success"}
+    return {"code": 0, "data": format_datetime_fields(rs, ['create_time']), "msg": "success"}
 
 
-@google_app.post('/bind_site_account')
+@google_app.post("/bind_site_account")
 def bind_site_account():
-    site_id = request.json.get('site_id')
-    account_id = request.json.get('account_id')
-    if not ScrapySitesPlatformAccount.select().where(ScrapySitesPlatformAccount.scrapy_site_id == site_id,
-                                                     ScrapySitesPlatformAccount.platform_account_id == account_id).exists():
-        ScrapySitesPlatformAccount.insert({ScrapySitesPlatformAccount.scrapy_site_id: site_id,
-                                           ScrapySitesPlatformAccount.platform_account_id: account_id}).execute()
-        return {'code': 0, 'msg': 'success'}
-    else:
-        return {'code': 1, 'msg': '已存在'}
-
-
-@google_app.post('/modify_site_account')
-def modify_site_account():
-    site_id = request.json.get('site_id')
-    account_id = request.json.get('account_id')
-    can_use = request.json.get('can_use')
-    data = request.json.get('data', None)
+    site_id = request.json.get("site_id")
+    account_id = request.json.get("account_id")
     account_type = FlaskPlatformAccounts.get(account_id).account_type
-    cache.delete(f'site_id_{site_id}_account_type_{account_type}')
-    ScrapySitesPlatformAccount.update(can_use=can_use).where(ScrapySitesPlatformAccount.scrapy_site_id == site_id,
-                                                             ScrapySitesPlatformAccount.platform_account_id == account_id).execute()
+    cache.delete(f"site_id_{site_id}_account_type_{account_type}")
+    if (
+        not ScrapySitesPlatformAccount.select()
+        .where(
+            ScrapySitesPlatformAccount.scrapy_site_id == site_id,
+            ScrapySitesPlatformAccount.platform_account_id == account_id,
+        )
+        .exists()
+    ):
+        ScrapySitesPlatformAccount.insert(
+            {
+                ScrapySitesPlatformAccount.scrapy_site_id: site_id,
+                ScrapySitesPlatformAccount.platform_account_id: account_id,
+            }
+        ).execute()
+        return {"code": 0, "msg": "success"}
+    else:
+        return {"code": 1, "msg": "已存在"}
+
+
+@google_app.post("/modify_site_account")
+def modify_site_account():
+    site_id = request.json.get("site_id")
+    account_id = request.json.get("account_id")
+    can_use = request.json.get("can_use")
+    data = request.json.get("data", None)
+    account_type = FlaskPlatformAccounts.get(account_id).account_type
+    cache.delete(f"site_id_{site_id}_account_type_{account_type}")
+    ScrapySitesPlatformAccount.update(can_use=can_use).where(
+        ScrapySitesPlatformAccount.scrapy_site_id == site_id,
+        ScrapySitesPlatformAccount.platform_account_id == account_id,
+    ).execute()
     if data is not None:
         FlaskPlatformAccounts.update({FlaskPlatformAccounts.data: data}).where(
-            FlaskPlatformAccounts.id == account_id).execute()
-    return {'code': 0, 'msg': 'success'}
+            FlaskPlatformAccounts.id == account_id
+        ).execute()
+    return {"code": 0, "msg": "success"}

@@ -55,6 +55,7 @@ class TblScrapyVisits(BaseModel):
 
     class Meta:
         table_name = "tbl_scrapy_visits_statistics"
+    
 
 
 class TblCategory(BaseModel):

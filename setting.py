@@ -11,9 +11,10 @@ MYSQL_SETTING = {
     },
 }
 
-CACHE_REDIS_SETTINGS = {'CACHE_TYPE': 'redis',
-                        'CACHE_REDIS_HOST': '36.32.174.26',
-                        'CACHE_REDIS_PORT': 5003,
-                        'CACHE_REDIS_DB': 0,
-                        'CACHE_REDIS_PASSWORD': 'b=!@#--pfdnzzxsj2kdgjm'
-                        }
+CACHE_REDIS_SETTINGS = {
+    "CACHE_TYPE": "redis",
+    "CACHE_REDIS_HOST": "36.32.174.26",
+    "CACHE_REDIS_PORT": 5003,
+    "CACHE_REDIS_DB": 0,
+    "CACHE_REDIS_PASSWORD": "b=!@#--pfdnzzxsj2kdgjm",
+}

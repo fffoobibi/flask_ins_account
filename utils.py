@@ -15,3 +15,18 @@ def validate_token(f):
             return jsonify({"error": "Invalid token"}), 401
 
     return wrapper
+
+
+def format_datetime_fields(
+    dict_records: list[dict],
+    datetime_fields: list[str],
+    datetime_format: str = "%Y-%m-%d %H:%M:%S",
+):
+    """
+    格式化字典中的日期时间字段。
+    """
+    for record in dict_records:
+        for field in datetime_fields:
+            if record[field]:
+                record[field] = record[field].strftime(datetime_format)
+    return dict_records
