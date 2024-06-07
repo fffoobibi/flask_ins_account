@@ -39,7 +39,8 @@ def simple_account_list():
     rs = list(
         FlaskPlatformAccounts.select()
         .where(FlaskPlatformAccounts.is_delete == 0)
-        .dicts().order_by(FlaskPlatformAccounts.account_type)
+        .dicts()
+        .order_by(FlaskPlatformAccounts.account_type)
     )
     return {"code": 0, "msg": "success", "data": rs}
 
@@ -157,26 +158,36 @@ def sites_list():
 @google_app.post("/bind_site_account")
 def bind_site_account():
     site_id = request.json.get("site_id")
-    account_id = request.json.get("account_id")
-    account_type = FlaskPlatformAccounts.get(account_id).account_type
-    cache.delete(f"site_id_{site_id}_account_type_{account_type}")
-    if (
-        not ScrapySitesPlatformAccount.select()
-        .where(
-            ScrapySitesPlatformAccount.scrapy_site_id == site_id,
-            ScrapySitesPlatformAccount.platform_account_id == account_id,
+    account_ids = request.json.get("account_ids")
+
+    rsp = list(
+        FlaskPlatformAccounts.select(
+            FlaskPlatformAccounts.id, FlaskPlatformAccounts.account_type
         )
-        .exists()
-    ):
-        ScrapySitesPlatformAccount.insert(
-            {
-                ScrapySitesPlatformAccount.scrapy_site_id: site_id,
-                ScrapySitesPlatformAccount.platform_account_id: account_id,
-            }
-        ).execute()
-        return {"code": 0, "msg": "success"}
-    else:
-        return {"code": 0, "msg": "已存在"}
+        .where(FlaskPlatformAccounts.id.in_(account_ids))
+        .dicts()
+    )
+    for v in rsp:
+        account_type = v["account_type"]
+        account_id = v["id"]
+        # account_type = FlaskPlatformAccounts.get(account_id).account_type
+        cache.delete(f"site_id_{site_id}_account_type_{account_type}")
+
+        if (
+            not ScrapySitesPlatformAccount.select()
+            .where(
+                ScrapySitesPlatformAccount.scrapy_site_id == site_id,
+                ScrapySitesPlatformAccount.platform_account_id == account_id,
+            )
+            .exists()
+        ):
+            ScrapySitesPlatformAccount.insert(
+                {
+                    ScrapySitesPlatformAccount.scrapy_site_id: site_id,
+                    ScrapySitesPlatformAccount.platform_account_id: account_id,
+                }
+            ).execute()
+    return {"code": 0, "msg": "success"}
 
 
 @google_app.post("/modify_site_account")
