@@ -39,7 +39,7 @@ def simple_account_list():
     rs = list(
         FlaskPlatformAccounts.select()
         .where(FlaskPlatformAccounts.is_delete == 0)
-        .dicts()
+        .dicts().order_by(FlaskPlatformAccounts.account_type)
     )
     return {"code": 0, "msg": "success", "data": rs}
 
@@ -176,7 +176,7 @@ def bind_site_account():
         ).execute()
         return {"code": 0, "msg": "success"}
     else:
-        return {"code": 1, "msg": "已存在"}
+        return {"code": 0, "msg": "已存在"}
 
 
 @google_app.post("/modify_site_account")
