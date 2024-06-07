@@ -66,8 +66,15 @@ def account_list():
 @google_app.post("/add_accounts")
 def add_platform_account():
     data = request.json.get("data")
-    FlaskPlatformAccounts.insert_many(data).execute()
-    return {"code": 0, "msg": "success"}
+    success = 0
+    total = len(data)
+    for value in data:
+        try:
+            FlaskPlatformAccounts.insert(value).execute()
+            success += 1
+        except:
+            pass
+    return {"code": 0, "msg": f"已添加{success}个账号, 共{total}个账号"}
 
 
 @google_app.post("/modify_account")
@@ -140,7 +147,11 @@ def sites_list():
             .dicts()
         )
 
-    return {"code": 0, "data": format_datetime_fields(rs, ['create_time']), "msg": "success"}
+    return {
+        "code": 0,
+        "data": format_datetime_fields(rs, ["create_time"]),
+        "msg": "success",
+    }
 
 
 @google_app.post("/bind_site_account")
