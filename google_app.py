@@ -167,26 +167,17 @@ def bind_site_account():
         .where(FlaskPlatformAccounts.id.in_(account_ids))
         .dicts()
     )
+    ScrapySitesPlatformAccount.delete().where(ScrapySitesPlatformAccount.scrapy_site_id==site_id).execute()
     for v in rsp:
         account_type = v["account_type"]
         account_id = v["id"]
-        # account_type = FlaskPlatformAccounts.get(account_id).account_type
         cache.delete(f"site_id_{site_id}_account_type_{account_type}")
-
-        if (
-            not ScrapySitesPlatformAccount.select()
-            .where(
-                ScrapySitesPlatformAccount.scrapy_site_id == site_id,
-                ScrapySitesPlatformAccount.platform_account_id == account_id,
-            )
-            .exists()
-        ):
-            ScrapySitesPlatformAccount.insert(
-                {
-                    ScrapySitesPlatformAccount.scrapy_site_id: site_id,
-                    ScrapySitesPlatformAccount.platform_account_id: account_id,
-                }
-            ).execute()
+        ScrapySitesPlatformAccount.insert(
+            {
+                ScrapySitesPlatformAccount.scrapy_site_id: site_id,
+                ScrapySitesPlatformAccount.platform_account_id: account_id,
+            }
+        ).execute()
     return {"code": 0, "msg": "success"}
 
 
