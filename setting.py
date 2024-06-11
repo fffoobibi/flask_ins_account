@@ -18,3 +18,16 @@ CACHE_REDIS_SETTINGS = {
     "CACHE_REDIS_DB": 0,
     "CACHE_REDIS_PASSWORD": "b=!@#--pfdnzzxsj2kdgjm",
 }
+
+MD_MYSQL_SETTINGS = {
+    "db_name": "mediamz",
+    "config": {
+        "charset": "utf8",
+        "sql_mode": "PIPES_AS_CONCAT",
+        "use_unicode": True,
+        "host": "107.155.48.202",
+        "port": 3306,
+        "user": "mdlocaluser",
+        "password": "u8Nt5kn2lf",
+    },
+}

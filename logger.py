@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(log_level)
 
 formater = logging.Formatter(
-    "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
+    "%(asctime)s - [P: %(process)d, T: %(threadName)s] %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 )
 file_handler = logging.FileHandler(
     "./logs/app.log",

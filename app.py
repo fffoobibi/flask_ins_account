@@ -6,13 +6,14 @@ from flask import Flask, request, jsonify
 
 from google_app import google_app, cache
 from models.account_model import (
+    TblMarketingTotalResource,
     TblPlatformAccount,
     TblScrapySite,
     TblScrapyVisits,
     TblCategory,
 )
 from utils import validate_token
-from models import database
+from scheduler import init_schduler
 
 app = Flask(__name__)
 app.register_blueprint(google_app, url_prefix="/google")
@@ -39,10 +40,44 @@ redis_client = redis.StrictRedis(
 #         database.close()
 
 
-@app.route("/categories")
+@app.get("/categories")
+@validate_token
 def get_categories():
     data = TblCategory.select().dicts()
     return {"data": list(data)}
+
+
+@app.post("/modifty_category")
+@validate_token
+def modifty_category():
+    data_id = request.json.get("id")
+    category_id = request.json.get("category_id")
+    TblMarketingTotalResource.update(
+        category_id=category_id, store_method=4, database_type=2
+    ).where(TblMarketingTotalResource.id == data_id).execute()
+    return {"code": 0, "msg": "success"}
+
+
+@app.get("/flat_categories")
+@validate_token
+def get_flat_categories():
+    resp = list(TblCategory.select().dicts())
+    keys = {}
+    for v in resp:
+        if v["pid"] == 0:
+            value = keys.setdefault(
+                v["id"],
+                {
+                    "name": v["name"],
+                    "id": v["id"],
+                    "subs": [],
+                },
+            )
+        else:
+            value = keys[v["pid"]]
+            value["subs"].append(v)
+
+    return {"data": list(keys.values())}
 
 
 @app.post("/submit_influence")
@@ -564,5 +599,7 @@ def modify_scrapy_visits_info():
     return jsonify({"code": 0, "msg": msg})
 
 
-if __name__ == '__main__':
+init_schduler()
+
+if __name__ == "__main__":
     app.run(debug=True)
