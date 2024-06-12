@@ -79,11 +79,14 @@ def classify():
                     s.add(v.strip())
             return f"红人简介：" + (desc or "").strip() + "\n红人标签：" + ",".join(s)
 
-    url = request.json.get(
-        "url", "http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run"
-    )
-    logger.info('call gpt url: %s', url)
     resource_id = request.json.get("id")
+    classify_type = request.json.get('classify_type')
+    url = 'http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run'
+    if classify_type == 'gpt':
+        url = 'http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run'
+    elif classify_type =='local':
+        url = 'http://36.32.174.26:5005/gpt_classify/classify_chain.chain/run'
+    logger.info('CALL GPT URL: %s', url)
     data: TblMarketingTotalResource = TblMarketingTotalResource.get_by_id(resource_id)
     if data.platform in [1, 2, 3]:
         content = get_resource_tags(resource_id, data.description, data.platform)
