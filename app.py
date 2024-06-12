@@ -83,13 +83,13 @@ def classify():
         "url", "http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run"
     )
     logger.info('call gpt url: %s', url)
-    logger.info('content: %s', content)
     resource_id = request.json.get("id")
     data: TblMarketingTotalResource = TblMarketingTotalResource.get_by_id(resource_id)
     if data.platform in [1, 2, 3]:
         content = get_resource_tags(resource_id, data.description, data.platform)
     else:
         return {"code": 1, "msg": "暂未实现！"}
+    logger.info('content: %s', content)
     headers = {"authorization": "bear asdfofgncbvpasdf"}
     resp = requests.post(url, headers=headers, json={"content": content})
     return {"code": 0, "msg": "success", "data": resp.json()}
