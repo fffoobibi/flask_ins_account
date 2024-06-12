@@ -31,3 +31,16 @@ MD_MYSQL_SETTINGS = {
         "password": "u8Nt5kn2lf",
     },
 }
+
+MD_HUB_MYSQL_SETTINGS = {
+    "db_name": "mediamz_hub",
+    "config": {
+        "charset": "utf8",
+        "sql_mode": "PIPES_AS_CONCAT",
+        "use_unicode": True,
+        "host": "106.15.120.166",
+        "port": 3306,
+        "user": "mdhublocaluser",
+        "password": "6ketn4z7DA",
+    },
+}

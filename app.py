@@ -3,6 +3,8 @@ import json
 
 import redis
 from flask import Flask, request, jsonify
+import requests
+from logger import logger
 
 from google_app import google_app, cache
 from models.account_model import (
@@ -12,6 +14,7 @@ from models.account_model import (
     TblScrapyVisits,
     TblCategory,
 )
+from models.hub_models import TblKolVideo
 from utils import validate_token
 from scheduler import init_schduler
 
@@ -38,6 +41,58 @@ redis_client = redis.StrictRedis(
 # def teardown(exc):
 #     if database.is_closed() is False:
 #         database.close()
+
+
+@app.post("/classify")
+def classify():
+
+    def get_resource_tags(id, desc: str, platform: int):
+        if platform == 1:
+            s = set()
+            vs = []
+            for obj in TblKolVideo.select(
+                TblKolVideo.video_title, TblKolVideo.video_description
+            ).where(TblKolVideo.kol_id == id)[:5]:
+                obj: TblKolVideo
+                description = obj.video_title
+                if description is None:
+                    description = ""
+                video_tag = (obj.video_tags or "").split(",")
+                for v in video_tag:
+                    s.add(v)
+                vs.append(description + ",".join(s))
+            return f"红人简介：" + (desc or "").strip() + "\n红人标签：" + ",".join(vs)
+        elif platform in [2, 3]:
+            rs = ""
+            for obj in TblKolVideo.select(
+                TblKolVideo.video_title, TblKolVideo.video_description
+            ).where(TblKolVideo.kol_id == id)[:5]:
+                obj: TblKolVideo
+                description = obj.video_title
+                if description is None:
+                    description = ""
+
+                rs += "," + description
+            s = set()
+            for v in rs.split(","):
+                if v.strip():
+                    s.add(v.strip())
+            return f"红人简介：" + (desc or "").strip() + "\n红人标签：" + ",".join(s)
+
+    url = request.json.get(
+        "url", "http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run"
+    )
+    logger.info('call gpt url: %s', url)
+    logger.info('content: %s', content)
+    resource_id = request.json.get("id")
+    data: TblMarketingTotalResource = TblMarketingTotalResource.get_by_id(resource_id)
+    if data.platform in [1, 2, 3]:
+        content = get_resource_tags(resource_id, data.description, data.platform)
+    else:
+        return {"code": 1, "msg": "暂未实现！"}
+    headers = {"authorization": "bear asdfofgncbvpasdf"}
+    resp = requests.post(url, headers=headers, json={"content": content})
+    return {"code": 0, "msg": "success", "data": resp.json()}
 
 
 @app.get("/categories")
