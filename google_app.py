@@ -193,8 +193,12 @@ def modify_site_account():
         ScrapySitesPlatformAccount.scrapy_site_id == site_id,
         ScrapySitesPlatformAccount.platform_account_id == account_id,
     ).execute()
+    update_data = {
+        FlaskPlatformAccounts.can_use: can_use
+    }
     if data is not None:
-        FlaskPlatformAccounts.update({FlaskPlatformAccounts.data: data}).where(
-            FlaskPlatformAccounts.id == account_id
-        ).execute()
+        update_data[FlaskPlatformAccounts.data] = data
+    FlaskPlatformAccounts.update(update_data).where(
+        FlaskPlatformAccounts.id == account_id
+    ).execute()
     return {"code": 0, "msg": "success"}
