@@ -21,6 +21,9 @@ def init_schduler():
 
             def reset_google_account():
                 try:
+                    logger.info('clear cache')
+                    from app import cache
+                    cache.clear()
                     logger.info("start reset can use")
                     if database.is_closed():
                         database.connect(reuse_if_open=True)
