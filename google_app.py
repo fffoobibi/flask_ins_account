@@ -82,6 +82,17 @@ def add_platform_account():
 def modify_account():
     account_id = request.json.get("account_id")
     modify_data = request.json.get("modify_data")
+
+    account_type = FlaskPlatformAccounts.get(account_id).account_type
+    sites_list = list(
+        ScrapySitesPlatformAccount.select(ScrapySitesPlatformAccount.id)
+        .where(ScrapySitesPlatformAccount.platform_account_id == account_id)
+        .dicts()
+    )
+    for sites in sites_list:
+        site_id = sites["id"]
+        cache.delete(f"site_id_{site_id}_account_type_{account_type}")
+
     FlaskPlatformAccounts.update(modify_data).where(
         FlaskPlatformAccounts.id == account_id
     ).execute()
@@ -167,7 +178,9 @@ def bind_site_account():
         .where(FlaskPlatformAccounts.id.in_(account_ids))
         .dicts()
     )
-    ScrapySitesPlatformAccount.delete().where(ScrapySitesPlatformAccount.scrapy_site_id==site_id).execute()
+    ScrapySitesPlatformAccount.delete().where(
+        ScrapySitesPlatformAccount.scrapy_site_id == site_id
+    ).execute()
     for v in rsp:
         account_type = v["account_type"]
         account_id = v["id"]
@@ -193,9 +206,7 @@ def modify_site_account():
         ScrapySitesPlatformAccount.scrapy_site_id == site_id,
         ScrapySitesPlatformAccount.platform_account_id == account_id,
     ).execute()
-    update_data = {
-        FlaskPlatformAccounts.can_use: can_use
-    }
+    update_data = {FlaskPlatformAccounts.can_use: can_use}
     if data is not None:
         update_data[FlaskPlatformAccounts.data] = data
     FlaskPlatformAccounts.update(update_data).where(
