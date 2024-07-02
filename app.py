@@ -148,7 +148,7 @@ def submit_influence():
             pipe.lpush(
                 "influencer_nickname_list:start_urls", json.dumps(v, ensure_ascii=False)
             )
-            pipe.execute()
+        pipe.execute()
     return {"code": 0, "msg": "success"}
 
 
