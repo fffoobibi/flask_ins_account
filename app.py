@@ -2,7 +2,7 @@ import datetime
 import json
 
 import redis
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import requests
 from logger import logger
 
@@ -13,10 +13,13 @@ from models.account_model import (
     TblScrapySite,
     TblScrapyVisits,
     TblCategory,
+    TblInfluencerExtension,
 )
 from models.hub_models import TblKolVideo
 from utils import validate_token
 from scheduler import init_schduler
+
+from utils import get_dt_range, save_to_excel
 
 app = Flask(__name__)
 app.register_blueprint(google_app, url_prefix="/google")
@@ -80,19 +83,19 @@ def classify():
             return f"红人简介：" + (desc or "").strip() + "\n红人标签：" + ",".join(s)
 
     resource_id = request.json.get("id")
-    classify_type = request.json.get('classify_type')
-    url = 'http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run'
-    if classify_type == 'gpt':
-        url = 'http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run'
-    elif classify_type =='local':
-        url = 'http://36.32.174.26:5005/gpt_classify/classify_chain.chain/run'
-    logger.info('CALL GPT URL: %s', url)
+    classify_type = request.json.get("classify_type")
+    url = "http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run"
+    if classify_type == "gpt":
+        url = "http://36.32.174.26:5005/gpt_classify/tiktok_chain.chain/run"
+    elif classify_type == "local":
+        url = "http://36.32.174.26:5005/gpt_classify/classify_chain.chain/run"
+    logger.info("CALL GPT URL: %s", url)
     data: TblMarketingTotalResource = TblMarketingTotalResource.get_by_id(resource_id)
     if data.platform in [1, 2, 3]:
         content = get_resource_tags(resource_id, data.description, data.platform)
     else:
         return {"code": 1, "msg": "暂未实现！"}
-    logger.info('content: %s', content)
+    logger.info("content: %s", content)
     headers = {"authorization": "bear asdfofgncbvpasdf"}
     resp = requests.post(url, headers=headers, json={"content": content})
     return {"code": 0, "msg": "success", "data": resp.json()}
@@ -150,6 +153,38 @@ def submit_influence():
             )
         pipe.execute()
     return {"code": 0, "msg": "success"}
+
+
+@app.post("/save_submit_influence")
+def submit_influence_by_url():
+    data = request.json.get("data")
+    TblInfluencerExtension.insert_many(data).on_conflict_ignore().execute()
+    return {"code": 0, "msg": "success"}
+
+
+@app.post("/download_influence")
+def download_influence():
+    query = list(
+        TblInfluencerExtension.select()
+        .where(TblInfluencerExtension.create_time.between(*get_dt_range(0)))
+        .dicts()
+    )
+    today = datetime.now().strftime("%Y-%m-%d")
+    file_path = save_to_excel(
+        query,
+        {
+            # "channel_id": "",  # = CharField(index=True)
+            "channel_name": "渠道名",  # = CharField()
+            "url": "主页地址",  # = CharField(unique=True)
+            "country": "国家",  # = CharField(null=True)
+            "fans": "粉丝数",  # = IntegerField(null=True)
+            "influencer_categories": "类目",  # = CharField(index=True)
+            # "keywords": "搜索关键词",  # = CharField(index=True, null=True)
+            "create_time": "创建时间",  # = DateTimeField(default=datetime.datetime.now, index=True)
+        },
+        file_name=today + "_influence.xlsx",
+    )
+    return {"code": 0, "msg": "success", "response": file_path}
 
 
 @app.route("/")

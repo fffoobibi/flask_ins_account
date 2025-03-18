@@ -44,3 +44,5 @@ MD_HUB_MYSQL_SETTINGS = {
         "password": "6ketn4z7DA",
     },
 }
+
+upload_path = "http://36.32.174.26:5004/uploads"

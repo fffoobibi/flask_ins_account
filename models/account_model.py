@@ -126,3 +126,15 @@ class TblMarketingTotalResource(BaseModel):
     class Meta:
         table_name = "tbl_marketing_total_resource"
         database = md_database
+
+
+class TblInfluencerExtension(BaseModel):
+    channel_id = CharField(index=True)
+    channel_name = CharField()
+    url = CharField(unique=True)
+    country = CharField(null=True)
+    fans = IntegerField(null=True)
+    influencer_categories = CharField(index=True)
+    keywords = CharField(index=True, null=True)
+    tag = JSONField(null=True)
+    create_time = DateTimeField(default=datetime.datetime.now, index=True)
