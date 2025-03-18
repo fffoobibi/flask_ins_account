@@ -138,3 +138,4 @@ class TblInfluencerExtension(BaseModel):
     keywords = CharField(index=True, null=True)
     tag = JSONField(null=True)
     create_time = DateTimeField(default=datetime.datetime.now, index=True)
+    total_videos = IntegerField(null=True, index=True)
