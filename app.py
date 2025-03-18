@@ -184,7 +184,7 @@ def download_influence():
             "create_time": "创建时间",  # = DateTimeField(default=datetime.datetime.now, index=True)
         },
         file_name=today + "_influence.xlsx",
-        column_widths={"channel_name": 20, "url": 20, "country": 20, "influencer_categories": 20, "create_time": 20},
+        column_widths={"channel_name": 20, "url": 60, "country": 10, "influencer_categories": 20, "create_time": 20},
     )
     return send_from_directory("./uploads", today + "_influence.xlsx", as_attachment=True)
     # return {"code": 0, "msg": "success", "response": file_path}
