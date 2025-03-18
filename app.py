@@ -163,7 +163,7 @@ def submit_influence_by_url():
     return {"code": 0, "msg": "success"}
 
 
-@app.post("/download_influence")
+@app.get("/download_influence")
 def download_influence():
     query = list(
         TblInfluencerExtension.select()
