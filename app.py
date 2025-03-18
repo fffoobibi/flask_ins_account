@@ -185,7 +185,8 @@ def download_influence():
         },
         file_name=today + "_influence.xlsx",
     )
-    return {"code": 0, "msg": "success", "response": file_path}
+    return send_from_directory("./uploads", today + "_influence.xlsx", as_attachment=True)
+    # return {"code": 0, "msg": "success", "response": file_path}
 
 
 @app.route("/")
