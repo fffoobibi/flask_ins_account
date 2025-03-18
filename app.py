@@ -156,6 +156,7 @@ def submit_influence():
 
 
 @app.post("/save_submit_influence")
+@validate_token
 def submit_influence_by_url():
     data = request.json.get("data")
     TblInfluencerExtension.insert_many(data).on_conflict_ignore().execute()
