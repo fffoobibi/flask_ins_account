@@ -170,7 +170,7 @@ def download_influence():
         .where(TblInfluencerExtension.create_time.between(*get_dt_range(0)))
         .dicts()
     )
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
     file_path = save_to_excel(
         query,
         {
