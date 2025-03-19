@@ -140,3 +140,6 @@ class TblInfluencerExtension(BaseModel):
     create_time = DateTimeField(default=datetime.datetime.now, index=True)
     total_videos = IntegerField(null=True, index=True)
     platform = SmallIntegerField(index=True)
+    
+    identify = CharField(null=True, index=True)
+    username = CharField(null=True, index=True)

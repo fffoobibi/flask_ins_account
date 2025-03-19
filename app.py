@@ -155,6 +155,17 @@ def submit_influence():
     return {"code": 0, "msg": "success"}
 
 
+@app.get("/confirm_username")
+def confirm_username():
+    username = request.args.get("username")
+    identify = request.args.get("identify")
+    if (username and identify):
+        TblInfluencerExtension.update(username=username).where(
+            TblInfluencerExtension.identify == identify
+        ).execute()
+    return {"code": 0, "msg": "success"}
+
+
 @app.post("/save_submit_influence")
 @validate_token
 def submit_influence_by_url():
@@ -184,9 +195,17 @@ def download_influence():
             "create_time": "创建时间",  # = DateTimeField(default=datetime.datetime.now, index=True)
         },
         file_name=today + "_influence.xlsx",
-        column_widths={"channel_name": 20, "url": 60, "country": 10, "influencer_categories": 20, "create_time": 20},
+        column_widths={
+            "channel_name": 20,
+            "url": 60,
+            "country": 10,
+            "influencer_categories": 20,
+            "create_time": 20,
+        },
     )
-    return send_from_directory("./uploads", today + "_influence.xlsx", as_attachment=True)
+    return send_from_directory(
+        "./uploads", today + "_influence.xlsx", as_attachment=True
+    )
     # return {"code": 0, "msg": "success", "response": file_path}
 
 
