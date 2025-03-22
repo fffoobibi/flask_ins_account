@@ -183,6 +183,45 @@ def submit_influence_by_url():
 
 @app.get("/download_influence")
 def download_influence():
+    identify = request.args.get("identify")
+    query = list(
+        TblInfluencerExtension.select()
+        .where(TblInfluencerExtension.create_time.between(*get_dt_range(0)),
+               TblInfluencerExtension.identify == identify
+               )
+        .dicts()
+    )
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    file_path = save_to_excel(
+        query,
+        {
+            # "channel_id": "",  # = CharField(index=True)
+            "channel_name": "渠道名",  # = CharField()
+            "url": "主页地址",  # = CharField(unique=True)
+            "country": "国家",  # = CharField(null=True)
+            "fans": "粉丝数",  # = IntegerField(null=True)
+            "influencer_categories": "类目",  # = CharField(index=True)
+            # "keywords": "搜索关键词",  # = CharField(index=True, null=True)
+            "create_time": "创建时间",  # = DateTimeField(default=datetime.datetime.now, index=True)
+            "identify": "抓取标识",
+            "username": "抓取人员",
+        },
+        file_name=today + "_influence.xlsx",
+        column_widths={
+            "channel_name": 20,
+            "url": 60,
+            "country": 10,
+            "influencer_categories": 20,
+            "create_time": 20,
+        },
+    )
+    return send_from_directory(
+        "./uploads", today + "_influence.xlsx", as_attachment=True
+    )
+    # return {"code": 0, "msg": "success", "response": file_path}
+
+@app.get("/download_total_influence")
+def download_total_influence():
     query = list(
         TblInfluencerExtension.select()
         .where(TblInfluencerExtension.create_time.between(*get_dt_range(0)))
@@ -200,8 +239,10 @@ def download_influence():
             "influencer_categories": "类目",  # = CharField(index=True)
             # "keywords": "搜索关键词",  # = CharField(index=True, null=True)
             "create_time": "创建时间",  # = DateTimeField(default=datetime.datetime.now, index=True)
+            "identify": "抓取标识",
+            "username": "抓取人员",
         },
-        file_name=today + "_influence.xlsx",
+        file_name=today + "total_influence.xlsx",
         column_widths={
             "channel_name": 20,
             "url": 60,
@@ -211,7 +252,7 @@ def download_influence():
         },
     )
     return send_from_directory(
-        "./uploads", today + "_influence.xlsx", as_attachment=True
+        "./uploads", today + "total_influence.xlsx", as_attachment=True
     )
     # return {"code": 0, "msg": "success", "response": file_path}
 
