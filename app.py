@@ -170,7 +170,14 @@ def confirm_username():
 @validate_token
 def submit_influence_by_url():
     data = request.json.get("data")
-    TblInfluencerExtension.insert_many(data).on_conflict_ignore().execute()
+    username = request.json.get("username")
+    identify = request.json.get("identify")
+    if data:
+        for v in data:
+            v["username"] = username
+            v["identify"] = identify
+            # TblInfluencerExtension.insert(**v).on_conflict_ignore().execute()
+        TblInfluencerExtension.insert_many(data).on_conflict_ignore().execute()
     return {"code": 0, "msg": "success"}
 
 
