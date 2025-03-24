@@ -177,7 +177,8 @@ def submit_influence_by_url():
             v["username"] = username
             v["identify"] = identify
             # TblInfluencerExtension.insert(**v).on_conflict_ignore().execute()
-        TblInfluencerExtension.insert_many(data).on_conflict_ignore().execute()
+        # TblInfluencerExtension.insert_many(data).on_conflict_ignore().execute()
+        TblInfluencerExtension.insert_many(data).execute()
     return {"code": 0, "msg": "success"}
 
 
